@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <title>OA Mapper 결과</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 32px;
+            line-height: 1.6;
+            background: #f7f7f7;
+        }
+        .topbar {
+            margin-bottom: 24px;
+        }
+        .topbar a {
+            text-decoration: none;
+            color: #1f6feb;
+        }
+        .claim-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+        .claim-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .claim-text {
+            margin-top: 12px;
+            white-space: pre-wrap;
+            background: #fafafa;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        .claim-highlight {
+            display: inline;
+            padding: 2px 4px;
+            border-radius: 6px;
+            margin: 0 1px;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
+        }
+        .claim-highlight-inventive_step {
+            background: #fde2e1;
+        }
+        .claim-highlight-novelty {
+            background: #fff0cf;
+        }
+        .claim-highlight-clarity {
+            background: #dff4fb;
+        }
+        .claim-highlight-other {
+            background: #ececec;
+        }
+        .inline-badge {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 6px;
+            border-radius: 999px;
+            font-size: 11px;
+            color: white;
+            vertical-align: middle;
+        }
+        .inline-badge-inventive_step {
+            background: #d9534f;
+        }
+        .inline-badge-novelty {
+            background: #f0ad4e;
+        }
+        .inline-badge-clarity {
+            background: #5bc0de;
+        }
+        .inline-badge-other {
+            background: #777;
+        }
+        .oa-box {
+            margin-top: 16px;
+            padding: 12px;
+            background: #fcfcff;
+            border-left: 4px solid #ccc;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 13px;
+            margin-right: 6px;
+            color: white;
+        }
+        .badge-inventive_step {
+            background: #d9534f;
+        }
+        .badge-novelty {
+            background: #f0ad4e;
+        }
+        .badge-clarity {
+            background: #5bc0de;
+        }
+        .badge-other {
+            background: #777;
+        }
+        .badge-none {
+            background: #999;
+        }
+        .muted {
+            color: #666;
+        }
+        .summary {
+            background: white;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <a href="/">← 다시 업로드</a>
+    </div>
+
+    <div class="summary">
+        <h1>분석 결과</h1>
+        <p><strong>OA 파일:</strong> {{ oa_filename }}</p>
+        <p><strong>청구항 파일:</strong> {{ claims_filename }}</p>
+        <p><strong>추출된 OA 항목 수:</strong> {{ display_rejection_count }}</p>
+        <p><strong>추출된 청구항 수:</strong> {{ claims|length }}</p>
+    </div>
+
+    {% for claim in claims %}
+        <div class="claim-card">
+            <div class="claim-header">
+                <h2>{{ claim.title }}</h2>
+                <div>
+                    {% if claim.rejections %}
+                        {% set shown = [] %}
+                      {% set ns = namespace(seen=[]) %}
+{% for rej in claim.rejections %}
+    {% if rej.label not in ns.seen %}
+        <span class="badge badge-{{ rej.type }}">{{ rej.label }}</span>
+        {% set ns.seen = ns.seen + [rej.label] %}
+    {% endif %}
+{% endfor %}
+                    {% else %}
+                        <span class="badge badge-none">거절이유 없음</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="claim-text">{{ claim.inline_text_html|safe }}</div>
+
+            {% if claim.rejections and not claim.inline_annotations %}
+                <p class="muted">청구항 본문에서 정확한 대응 구문을 찾지 못해 아래에 거절이유만 표시했습니다.</p>
+            {% endif %}
+
+            <div class="oa-box">
+                <h3>OA 거절이유</h3>
+                {% if claim.rejections %}
+                    <ul>
+                        {% for rej in claim.rejections %}
+                            <li><strong>{{ rej.label }}</strong>: {{ rej.display_message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="muted">해당 없음</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</body>
+</html>
